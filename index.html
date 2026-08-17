@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rafzz Official — Join Channel</title>
+<style>
+  :root {
+    --bg-img: url('66097.png');
+    --cyan: #00f3ff;
+    --purple: #9b6bff;
+    --gold: #ffd700;
+    --green-health: #00ff66;
+    --fire-red: #ff3300;
+    --panel: rgba(10, 12, 20, 0.75);
+    --border: rgba(0, 243, 255, 0.3);
+    --text: #e9edf3;
+    --muted: #a0aec0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; width: 100%; overflow-x: hidden; font-family: 'Segoe UI', system-ui, sans-serif; background: #000; color: var(--text); }
+
+  /* BACKGROUND LAYER & ANIMATION CYCLE */
+  .bg-container {
+    position: fixed;
+    inset: 0;
+    background-image: var(--bg-img);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+    transition: filter 0.5s ease;
+  }
+
+  /* CYBER SCANLINES & GRID OVERLAY */
+  .cyber-overlay {
+    position: fixed;
+    inset: 0;
+    background: 
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+      linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    background-size: 100% 4px, 6px 100%;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .grid-overlay {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* CANVAS FOR LIGHTNING, FIRE & HEALTH PARTICLES */
+  #fxCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  /* HEALTH WAVE SCANNER (REGEN EFFECT) */
+  .health-wave {
+    position: fixed;
+    left: 0; right: 0;
+    height: 15px;
+    background: linear-gradient(90deg, transparent, var(--green-health), transparent);
+    box-shadow: 0 0 25px var(--green-health), 0 0 50px var(--green-health);
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* MAIN CYBER CARD */
+  .container {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 6;
+  }
+
+  .card {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 32px 28px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.15), inset 0 0 15px rgba(0, 243, 255, 0.05);
+    transition: all 0.5s ease;
+  }
+
+  /* HUD CORNER ACCENTS */
+  .hud-corner {
+    position: absolute;
+    width: 12px; height: 12px;
+    border: 2px solid var(--cyan);
+  }
+  .hud-tl { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+  .hud-tr { top: -2px; right: -2px; border-left: none; border-bottom: none; }
+  .hud-bl { bottom: -2px; left: -2px; border-right: none; border-top: none; }
+  .hud-br { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+  /* CYBER SYSTEM STATUS BAR */
+  .system-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: monospace;
+    font-size: 11px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+  }
+  .status-tag {
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    border: 1px solid rgba(0, 243, 255, 0.4);
+    padding: 5px 12px;
+    border-radius: 100px;
+    background: rgba(0, 243, 255, 0.08);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+  }
+  .badge::before {
+    content: '';
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  /* LOGO EFFECT */
+  .logo {
+    margin-top: 14px;
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-transform: uppercase;
+    position: relative;
+    background: linear-gradient(120deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .logo span { color: #fff; -webkit-text-fill-color: #fff; }
+
+  .desc {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .perks {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .perk {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 13.5px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .perk:hover {
+    transform: translateX(4px);
+    border-color: var(--cyan);
+  }
+  .perk .icon {
+    width: 36px; height: 36px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    background: linear-gradient(135deg, rgba(0, 243, 255, 0.15), rgba(155, 107, 255, 0.15));
+    border: 1px solid rgba(0, 243, 255, 0.2);
+  }
+  .perk strong { display: block; color: var(--text); font-weight: 600; }
+  .perk small { color: var(--muted); font-weight: 400; }
+
+  .cta {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 15px;
+    color: #020b14;
+    background: linear-gradient(120deg, var(--cyan), #00ffaa);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .cta:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0, 243, 255, 0.7); }
+
+  .section-title {
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  
+  .button-group {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+  }
+  
+  .cta-secondary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    background: rgba(255,255,255,0.03);
+    transition: all 0.2s ease;
+  }
+  .cta-secondary:hover {
+    background: rgba(0, 243, 255, 0.1);
+    border-color: var(--cyan);
+    transform: translateY(-2px);
+  }
+
+  .foot {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: monospace;
+    letter-spacing: .05em;
+  }
+
+  /* DYNAMIC EFFECT CLASSES CONTROLLED BY JS */
+  body.burn-phase .bg-container {
+    filter: contrast(180%) brightness(0.2) sepia(1) hue-rotate(-50deg);
+  }
+  body.burn-phase .card {
+    border-color: var(--fire-red);
+    box-shadow: 0 0 40px rgba(255, 51, 0, 0.5);
+  }
+  body.heal-phase .card {
+    border-color: var(--green-health);
+    box-shadow: 0 0 40px rgba(0, 255, 102, 0.5);
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-container" id="bgLayer"></div>
+<div class="cyber-overlay"></div>
+<div class="grid-overlay"></div>
+<div class="health-wave" id="healthWave"></div>
+<canvas id="fxCanvas"></canvas>
+
+<div class="container">
+  <div class="card" id="mainCard">
+    <div class="hud-corner hud-tl"></div>
+    <div class="hud-corner hud-tr"></div>
+    <div class="hud-corner hud-bl"></div>
+    <div class="hud-corner hud-br"></div>
+
+    <div class="system-status">
+      <span>SYS.LOC // ONLINE</span>
+      <span class="status-tag" id="statusTag" style="background: rgba(0,243,255,0.2); color: var(--cyan);">SYS_STABLE</span>
+    </div>
+
+    <span class="badge">Channel Aktif</span>
+
+    <div class="logo"><span>Rafzz</span> Official</div>
+
+    <p class="desc">
+      Gabung sekarang untuk mendapatkan informasi update terbaru dan giveaway eksklusif langsung dari channel resmi Rafzz Official .
+    </p>
+
+    <div class="perks">
+      <div class="perk">
+        <div class="icon">⚡</div>
+        <div>
+          <strong>Share-Share 24 Jam Nonstop</strong>
+          <small>Informasi update terbaru seperti file gacor, proxy gacor, apkmod gacor, cheat gacor, panel, dan banyak lagi dengan cara free</small>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="icon">🔑</div>
+        <div>
+          <strong>Giveaway key seperti key apkmod, key proxy, key cheat, key panel</strong>
+          <small>Cuma di saluran ini yg giveaway key apkmod, proxy, panel yg vip menjadi free</small>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="icon">🎁</div>
+        <div>
+          <strong>Banyak lagi event lain nya</strong>
+          <small>Seperti cr berhadiah, daget, dan lain lain</small>
+        </div>
+      </div>
+    </div>
+
+    <a class="cta" href="https://whatsapp.com/channel/0029Vb75VQWA2pL9MTcaeQ31" target="_blank" rel="noopener">
+      Join Channel Rafzz • [ AMBIL KEY DI SINI ]
+    </a>
+
+    <a class="cta" href="https://whatsapp.com/channel/0029Vb6xLJC2Jl8LYtMSmu3L" target="_blank" rel="noopener">
+      Join Channel Rafzz • [ CH BACK UP ]
+    </a>
+
+    <!-- Bagian Admin -->
+    <div class="section-title">Kontak Official Admin:</div>
+    <div class="button-group">
+      <a class="cta-secondary" href="https://wa.me/6285122793014" target="_blank" rel="noopener">
+        💬 Wa Rafzz v1
+      </a>
+      <a class="cta-secondary" href="https://wa.me/6285181310929" target="_blank" rel="noopener">
+        💬 Wa Rafzz v2
+      </a>
+    </div>
+
+    <div class="foot">Rafzz Official · CYBER SYSTEM V2.6</div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('fxCanvas');
+  const ctx = canvas.getContext('2d');
+  const statusTag = document.getElementById('statusTag');
+  const healthWave = document.getElementById('healthWave');
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  let currentState = 0; 
+  let particles = [];
+  let lightnings = [];
+
+  function createLightning() {
+    let x = Math.random() * canvas.width;
+    let y = 0;
+    let segments = [];
+    while (y < canvas.height) {
+      let nextX = x + (Math.random() - 0.5) * 60;
+      let nextY = y + Math.random() * 40 + 10;
+      segments.push({ x1: x, y1: y, x2: nextX, y2: nextY });
+      x = nextX;
+      y = nextY;
+    }
+    lightnings.push({ segments, opacity: 1, width: Math.random() * 3 + 2 });
+  }
+
+  class Particle {
+    constructor(type) {
+      this.reset(type);
+    }
+    reset(type) {
+      this.type = type;
+      this.x = Math.random() * canvas.width;
+      this.y = type === 'ember' ? canvas.height + 10 : Math.random() * canvas.height;
+      this.size = Math.random() * 4 + 1;
+      this.speedY = type === 'ember' ? -(Math.random() * 3 + 1) : (Math.random() * 2 + 0.5);
+      this.speedX = (Math.random() - 0.5) * 1.5;
+      this.opacity = Math.random() * 0.8 + 0.2;
+    }
+    update() {
+      this.y += this.speedY;
+      this.x += this.speedX;
+      this.opacity -= 0.005;
+      if (this.opacity <= 0 || this.y < 0 || this.y > canvas.height) {
+        this.reset(this.type);
+      }
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = this.type === 'ember' 
+        ? `rgba(255, ${Math.floor(Math.random() * 150)}, 0, ${this.opacity})` 
+        : `rgba(0, 255, 102, ${this.opacity})`;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = this.type === 'ember' ? '#ff3300' : '#00ff66';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (currentState === 0 || currentState === 1) {
+      if (Math.random() < 0.08) createLightning();
+    }
+
+    for (let i = lightnings.length - 1; i >= 0; i--) {
+      let l = lightnings[i];
+      ctx.strokeStyle = `rgba(255, 215, 0, ${l.opacity})`;
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 15;
+      ctx.lineWidth = l.width;
+      ctx.beginPath();
+      l.segments.forEach(s => {
+        ctx.moveTo(s.x1, s.y1);
+        ctx.lineTo(s.x2, s.y2);
+      });
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      l.opacity -= 0.1;
+      if (l.opacity <= 0) lightnings.splice(i, 1);
+    }
+
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  function cycleSystem() {
+    currentState = 0;
+    document.body.className = '';
+    statusTag.innerText = 'SYS_STABLE';
+    statusTag.style.background = 'rgba(0,243,255,0.2)';
+    statusTag.style.color = 'var(--cyan)';
+    particles = [];
+
+    setTimeout(() => {
+      currentState = 1;
+      document.body.className = 'burn-phase';
+      statusTag.innerText = 'CRITICAL_BURN';
+      statusTag.style.background = 'rgba(255,51,0,0.3)';
+      statusTag.style.color = 'var(--fire-red)';
+      particles = Array.from({ length: 70 }, () => new Particle('ember'));
+    }, 4000);
+
+    setTimeout(() => {
+      currentState = 2;
+      document.body.className = 'heal-phase';
+      statusTag.innerText = 'RECOVERY_ACTIVE';
+      statusTag.style.background = 'rgba(0,255,102,0.3)';
+      statusTag.style.color = 'var(--green-health)';
+      
+      healthWave.style.opacity = '1';
+      healthWave.style.top = '0%';
+      healthWave.style.transition = 'top 3.5s linear, opacity 0.5s ease';
+      setTimeout(() => healthWave.style.top = '100%', 50);
+
+      particles = Array.from({ length: 80 }, () => new Particle('health'));
+    }, 8000);
+
+    setTimeout(() => {
+      healthWave.style.opacity = '0';
+      healthWave.style.transition = 'none';
+    }, 12500);
+  }
+
+  cycleSystem();
+  setInterval(cycleSystem, 13000);
+</script>
+</body>
+</html>
